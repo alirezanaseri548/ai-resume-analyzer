@@ -1,0 +1,61 @@
+﻿import React, { useState, useEffect } from "react";
+import { getProfile } from "../../api/userApi";
+
+export default function SettingsPage() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+let mounted = true;
+
+getProfile()
+.then((data) => {
+if (!mounted) return;
+
+const nextUser = data || {};
+setUser(nextUser);
+
+try {
+localStorage.setItem("user", JSON.stringify(nextUser));
+} catch {}
+})
+.catch(() => {
+// keep fallback from localStorage
+});
+
+return () => {
+mounted = false;
+};
+  }, []);
+
+  const fullName = user?.fullName || user?.name || user?.email || "Loading profile...";
+  const email = user?.email || "No email";
+  const role = String(user?.role || "USER").toUpperCase() === "ADMIN" ? "ADMIN" : "USER";
+  const verified = user?.emailVerified === true || user?.isVerified === true;
+
+  return (
+<div className="page-card">
+<h1 className="page-title">Settings</h1>
+<div className="page-subtitle">
+Manage your account preferences and workspace configuration.
+</div>
+
+<section className="list-card">
+<div className="list-row">
+<div>
+<div className="list-row-title">Profile Name</div>
+<div className="list-row-subtitle">{fullName}</div>
+</div>
+<div className="badge">{role}</div>
+</div>
+
+<div className="list-row">
+<div>
+<div className="list-row-title">Email</div>
+<div className="list-row-subtitle">{email}</div>
+</div>
+<div className="badge">{verified ? "Verified" : "Not Verified"}</div>
+</div>
+</section>
+</div>
+  );
+}

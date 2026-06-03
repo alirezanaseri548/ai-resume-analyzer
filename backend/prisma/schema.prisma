@@ -1,0 +1,213 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  emailVerified           Boolean                  @default(false)
+  id                      String                   @id @default(uuid())
+  fullName                String
+  email                   String                   @unique
+  passwordHash            String
+  role                    UserRole                 @default(USER)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  history                 AnalysisHistory[]
+  settings                AppSetting[]
+  dashboardCaches         DashboardStatCache?
+  emailVerificationTokens EmailVerificationToken[]
+  refreshTokens           RefreshToken[]
+  reports                 Report[]
+  resumes                 Resume[]
+  skillInsights           UserSkillInsight[]
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Resume {
+  id               String            @id @default(uuid())
+  userId           String
+  originalFileName String
+  storedFilePath   String
+  mimeType         String
+  fileSize         Int
+  status           ResumeStatus      @default(UPLOADED)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  history          AnalysisHistory[]
+  jobMatches       JobMatch[]
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analyses         ResumeAnalysis[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model ResumeAnalysis {
+  id                String   @id @default(uuid())
+  resumeId          String
+  extractedText     String?
+  skills            Json?
+  experienceSummary String?
+  educationSummary  String?
+  atsScore          Float?
+  strengths         Json?
+  weaknesses        Json?
+  suggestions       Json?
+  createdAt         DateTime @default(now())
+  resume            Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@index([resumeId])
+}
+
+model JobMatch {
+  id              String   @id @default(uuid())
+  resumeId        String
+  jobDescription  String
+  matchScore      Float?
+  missingSkills   Json?
+  matchedSkills   Json?
+  improvementTips Json?
+  createdAt       DateTime @default(now())
+  resume          Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@index([resumeId])
+}
+
+model AnalysisHistory {
+  id         String           @id @default(uuid())
+  userId     String
+  resumeId   String
+  analysisId String?
+  eventType  HistoryEventType
+  metadata   Json?
+  createdAt  DateTime         @default(now())
+  resume     Resume           @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([resumeId])
+  @@index([eventType])
+}
+
+model SkillCatalog {
+  id          String             @id @default(uuid())
+  name        String             @unique
+  category    String
+  description String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  userLinks   UserSkillInsight[]
+}
+
+model UserSkillInsight {
+  id         String       @id @default(uuid())
+  userId     String
+  skillId    String
+  level      Int          @default(0)
+  confidence Float        @default(0)
+  source     String?
+  lastSeenAt DateTime?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  skill      SkillCatalog @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  @@index([userId])
+  @@index([skillId])
+}
+
+model Report {
+  id        String     @id @default(uuid())
+  userId    String
+  title     String
+  type      ReportType
+  content   Json?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+}
+
+model DashboardStatCache {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  totalResumes    Int      @default(0)
+  analyzedResumes Int      @default(0)
+  avgAtsScore     Float    @default(0)
+  topSkills       Json?
+  reportCount     Int      @default(0)
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AppSetting {
+  id        String   @id @default(uuid())
+  userId    String
+  key       String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ResumeStatus {
+  UPLOADED
+  PROCESSING
+  ANALYZED
+  FAILED
+}
+
+enum HistoryEventType {
+  UPLOADED
+  PROCESSING
+  ANALYZED
+  FAILED
+  REANALYZED
+  MATCHED_TO_JOB
+  REPORT_CREATED
+  SETTINGS_UPDATED
+}
+
+enum ReportType {
+  RESUME_ANALYSIS
+  SKILL_SUMMARY
+  JOB_MATCH
+  DASHBOARD_SUMMARY
+}

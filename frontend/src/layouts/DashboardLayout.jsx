@@ -1,4 +1,4 @@
-﻿import React from "react"
+﻿import React, { useEffect, useState } from "react"
 import { Outlet, useLocation } from "react-router-dom"
 import Sidebar from "../components/Sidebar"
 
@@ -13,9 +13,58 @@ function getHeaderTitle(pathname) {
   return "Dashboard"
 }
 
+function readAuthUser() {
+  try {
+    const raw =
+      JSON.parse(localStorage.getItem("auth_user") || "null") ||
+      JSON.parse(localStorage.getItem("user") || "null") ||
+      {}
+
+    return {
+      fullName:
+        raw?.fullName ||
+        raw?.name ||
+        raw?.user?.fullName ||
+        raw?.user?.name ||
+        raw?.profile?.fullName ||
+        raw?.profile?.name ||
+        raw?.email ||
+        raw?.user?.email ||
+        raw?.profile?.email ||
+        "User",
+      email: raw?.email || raw?.user?.email || raw?.profile?.email || "",
+    }
+  } catch {
+    return {
+      fullName: "User",
+      email: "",
+    }
+  }
+}
+
 export default function DashboardLayout() {
   const location = useLocation()
   const title = getHeaderTitle(location.pathname)
+
+  const [headerUser, setHeaderUser] = useState(() => readAuthUser())
+
+  useEffect(() => {
+    setHeaderUser(readAuthUser())
+  }, [location.pathname])
+
+  useEffect(() => {
+    function syncUser() {
+      setHeaderUser(readAuthUser())
+    }
+
+    window.addEventListener("storage", syncUser)
+    window.addEventListener("auth-user-changed", syncUser)
+
+    return () => {
+      window.removeEventListener("storage", syncUser)
+      window.removeEventListener("auth-user-changed", syncUser)
+    }
+  }, [])
 
   return (
     <div className="dashboard-shell">
@@ -33,8 +82,7 @@ export default function DashboardLayout() {
               </div>
 
               <div className="header-user">
-                <div className="header-user-avatar" />
-                <div className="header-user-name">John Smith</div>
+                <div className="header-user-name">{headerUser.fullName}</div>
               </div>
             </div>
           </header>

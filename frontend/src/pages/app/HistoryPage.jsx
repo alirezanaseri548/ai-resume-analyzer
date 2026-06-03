@@ -1,6 +1,22 @@
-﻿import React from "react"
+import React, { useEffect, useState } from "react"
+import { getHistory } from "../../api/resume"
 
 export default function HistoryPage() {
+  const [items, setItems] = useState([])
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getHistory()
+        setItems(data)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    load()
+  }, [])
+
   return (
     <div className="page-card">
       <h1 className="page-title">History</h1>
@@ -9,20 +25,23 @@ export default function HistoryPage() {
       </div>
 
       <section className="list-card">
-        <div className="list-row">
-          <div>
-            <div className="list-row-title">Resume analyzed for Backend Engineer</div>
-            <div className="list-row-subtitle">10 minutes ago</div>
-          </div>
-          <div className="badge">Done</div>
-        </div>
-        <div className="list-row">
-          <div>
-            <div className="list-row-title">New report exported</div>
-            <div className="list-row-subtitle">Today at 08:10</div>
-          </div>
-          <div className="badge">Success</div>
-        </div>
+        {items.length === 0 ? (
+          <div>No history found.</div>
+        ) : (
+          items.map((item) => (
+            <div className="list-row" key={item.id}>
+              <div>
+                <div className="list-row-title">
+                  {item.eventType} - {item.resume?.originalFileName || "Resume"}
+                </div>
+                <div className="list-row-subtitle">
+                  {new Date(item.createdAt).toLocaleString()}
+                </div>
+              </div>
+              <div className="badge">{item.eventType}</div>
+            </div>
+          ))
+        )}
       </section>
     </div>
   )

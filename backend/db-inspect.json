@@ -1,0 +1,369 @@
+{
+  "user_count": 10,
+  "resume_count": 1,
+  "resumeAnalysis_count": 2,
+  "analysisHistory_count": 5,
+  "skillCatalog_count": 18,
+  "userSkillInsight_count": 0,
+  "refreshToken_count": 0,
+  "jobMatch_count": 0,
+  "report_count": 2,
+  "appSetting_count": 0,
+  "dashboardStatCache_count": 1,
+  "users": [
+    {
+      "emailVerified": false,
+      "id": "2590e69c-ec0e-4343-ab55-da5bf666e718",
+      "fullName": "Sara Mohammadi",
+      "email": "sara.mohammadi@example.com",
+      "passwordHash": "$2b$10$as9FQdgwK2KKS9qX9nyVquIC6GbYS481ZZmmezCXyoXiALyvH/86m",
+      "role": "USER",
+      "createdAt": "2026-06-03T05:56:39.337Z",
+      "updatedAt": "2026-06-03T05:56:39.337Z"
+    },
+    {
+      "emailVerified": false,
+      "id": "54341dec-a1c0-4ba4-bc60-12a1c14227bc",
+      "fullName": "Fatemeh Jafari",
+      "email": "fatemeh.jafari@example.com",
+      "passwordHash": "$2b$10$as9FQdgwK2KKS9qX9nyVquIC6GbYS481ZZmmezCXyoXiALyvH/86m",
+      "role": "USER",
+      "createdAt": "2026-06-03T05:56:39.352Z",
+      "updatedAt": "2026-06-03T05:56:39.352Z"
+    },
+    {
+      "emailVerified": false,
+      "id": "cb1c8a7b-2b07-4d02-8b14-1328f019a42e",
+      "fullName": "Reza Ahmadi",
+      "email": "reza.ahmadi@example.com",
+      "passwordHash": "$2b$10$as9FQdgwK2KKS9qX9nyVquIC6GbYS481ZZmmezCXyoXiALyvH/86m",
+      "role": "USER",
+      "createdAt": "2026-06-03T05:56:39.345Z",
+      "updatedAt": "2026-06-03T05:56:39.345Z"
+    },
+    {
+      "emailVerified": false,
+      "id": "cbd7f3e5-a858-4cbd-ac08-8494eaffc7cb",
+      "fullName": "Admin User",
+      "email": "admin@resume-ai.local",
+      "passwordHash": "$2b$10$as9FQdgwK2KKS9qX9nyVquIC6GbYS481ZZmmezCXyoXiALyvH/86m",
+      "role": "ADMIN",
+      "createdAt": "2026-06-03T05:56:39.335Z",
+      "updatedAt": "2026-06-03T05:56:39.335Z"
+    },
+    {
+      "emailVerified": false,
+      "id": "cf5c5af8-7754-4b8d-ab64-862ee5995739",
+      "fullName": "Pouya Azizi",
+      "email": "pouya.azizi@example.com",
+      "passwordHash": "$2b$10$as9FQdgwK2KKS9qX9nyVquIC6GbYS481ZZmmezCXyoXiALyvH/86m",
+      "role": "USER",
+      "createdAt": "2026-06-03T05:56:39.355Z",
+      "updatedAt": "2026-06-03T05:56:39.355Z"
+    },
+    {
+      "emailVerified": false,
+      "id": "d45ad16a-71a1-4aba-9202-dbcb290489ef",
+      "fullName": "Hossein Tavakoli",
+      "email": "hossein.tavakoli@example.com",
+      "passwordHash": "$2b$10$as9FQdgwK2KKS9qX9nyVquIC6GbYS481ZZmmezCXyoXiALyvH/86m",
+      "role": "USER",
+      "createdAt": "2026-06-03T05:56:39.350Z",
+      "updatedAt": "2026-06-03T05:56:39.350Z"
+    },
+    {
+      "emailVerified": false,
+      "id": "db5c8831-4325-4a7b-8dab-8fce469254f3",
+      "fullName": "Mahsa Ebrahimi",
+      "email": "mahsa.ebrahimi@example.com",
+      "passwordHash": "$2b$10$as9FQdgwK2KKS9qX9nyVquIC6GbYS481ZZmmezCXyoXiALyvH/86m",
+      "role": "USER",
+      "createdAt": "2026-06-03T05:56:39.348Z",
+      "updatedAt": "2026-06-03T05:56:39.348Z"
+    },
+    {
+      "emailVerified": false,
+      "id": "db6ef474-92df-4544-b762-ba57f4de7e93",
+      "fullName": "Alireza Naseri",
+      "email": "alirezanaseri369@gmail.com",
+      "passwordHash": "$2b$10$as9FQdgwK2KKS9qX9nyVquIC6GbYS481ZZmmezCXyoXiALyvH/86m",
+      "role": "USER",
+      "createdAt": "2026-06-03T05:56:39.331Z",
+      "updatedAt": "2026-06-03T05:56:39.331Z"
+    },
+    {
+      "emailVerified": false,
+      "id": "e67e8c7a-6cd0-4eb1-ac98-3868403f5d23",
+      "fullName": "Amir Hosseini",
+      "email": "amir.hosseini@example.com",
+      "passwordHash": "$2b$10$as9FQdgwK2KKS9qX9nyVquIC6GbYS481ZZmmezCXyoXiALyvH/86m",
+      "role": "USER",
+      "createdAt": "2026-06-03T05:56:39.340Z",
+      "updatedAt": "2026-06-03T05:56:39.340Z"
+    },
+    {
+      "emailVerified": false,
+      "id": "f940555a-30a0-4b3a-84d5-e53ee51cd26e",
+      "fullName": "Niloofar Karimi",
+      "email": "niloofar.karimi@example.com",
+      "passwordHash": "$2b$10$as9FQdgwK2KKS9qX9nyVquIC6GbYS481ZZmmezCXyoXiALyvH/86m",
+      "role": "USER",
+      "createdAt": "2026-06-03T05:56:39.342Z",
+      "updatedAt": "2026-06-03T05:56:39.342Z"
+    }
+  ],
+  "skills": [
+    {
+      "id": "380676af-2f55-40c2-ba62-d7a2d0fa6c35",
+      "name": "NestJS",
+      "category": "Backend",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "3d7144d6-9abf-470c-819f-3cf9ebd0434d",
+      "name": "TypeScript",
+      "category": "Programming",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "432269e3-fd6a-4011-8c0c-d37de4e0178d",
+      "name": "Machine Learning",
+      "category": "AI",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "43edef3a-0a96-40c1-a506-decc4c9c7306",
+      "name": "Next.js",
+      "category": "Frontend",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "59d69e56-9b8c-486a-b3f5-d3686f69227b",
+      "name": "Express.js",
+      "category": "Backend",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "78ff03b7-a7ec-456d-a6c2-7a2c42f2e43a",
+      "name": "Git",
+      "category": "Tools",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "807fcbc2-2185-441e-b435-6630118afac3",
+      "name": "MongoDB",
+      "category": "Database",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "82b52a59-8ea3-4f2c-86a3-2d8156c6f040",
+      "name": "PostgreSQL",
+      "category": "Database",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "87ceb5cb-b8a8-4f2b-8949-995b5e577668",
+      "name": "Java",
+      "category": "Programming",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "8b192b84-785f-4836-a8c9-bd477d7dc13c",
+      "name": "JavaScript",
+      "category": "Programming",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "95bac531-64e5-4374-9226-d7477b364ca0",
+      "name": "C#",
+      "category": "Programming",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "b873608c-401c-46e7-8ea8-3159521edd5a",
+      "name": "HTML",
+      "category": "Frontend",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "bfc48ec9-f54d-4dd6-921b-559baa1abbe7",
+      "name": "Docker",
+      "category": "DevOps",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "c4947d6c-f22c-40de-95cb-8472c8c34fd4",
+      "name": "Python",
+      "category": "Programming",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "cfc997a7-d700-4813-ba93-5903a4e7d914",
+      "name": "Vue.js",
+      "category": "Frontend",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "e266e68a-c189-456e-8efe-2281b5655e1d",
+      "name": "CSS",
+      "category": "Frontend",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "f37cffba-f304-47b9-904a-92d2a92368ed",
+      "name": "React",
+      "category": "Frontend",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    },
+    {
+      "id": "f811a825-e191-4ac7-824e-2de7ce7366f6",
+      "name": "Node.js",
+      "category": "Backend",
+      "description": null,
+      "createdAt": "2026-06-03T05:56:39.358Z",
+      "updatedAt": "2026-06-03T05:56:39.358Z"
+    }
+  ],
+  "resumes": [
+    {
+      "id": "5e98a873-612f-4622-94a9-326836fcec21",
+      "userId": "2590e69c-ec0e-4343-ab55-da5bf666e718",
+      "originalFileName": "4.pdf",
+      "storedFilePath": "C:\\Users\\Alireza's PC\\Desktop\\ai-resume-analyzer\\backend\\uploads\\1780466226827-4.pdf",
+      "mimeType": "application/pdf",
+      "fileSize": 22505,
+      "status": "ANALYZED",
+      "createdAt": "2026-06-03T05:57:06.830Z",
+      "updatedAt": "2026-06-03T05:57:08.763Z"
+    }
+  ],
+  "reports": [
+    {
+      "id": "b40219da-3240-4cc6-baf8-43ef4a8484be",
+      "userId": "2590e69c-ec0e-4343-ab55-da5bf666e718",
+      "title": "Resume Analysis - 4.pdf",
+      "type": "RESUME_ANALYSIS",
+      "content": {
+        "skills": [
+          {
+            "name": "JavaScript",
+            "count": 1,
+            "label": "Detected",
+            "score": 47,
+            "category": "Frontend"
+          }
+        ],
+        "atsScore": 38,
+        "fileName": "4.pdf",
+        "resumeId": "5e98a873-612f-4622-94a9-326836fcec21",
+        "strengths": [
+          "Resume structure is readable",
+          "Contains measurable achievements"
+        ],
+        "analysisId": "f194fea0-2046-4968-ae77-780321ecfc30",
+        "weaknesses": [
+          "Limited detected technical skills"
+        ],
+        "generatedAt": "2026-06-03T05:57:08.767Z",
+        "suggestions": [
+          "Add a dedicated technical skills section with relevant tools and technologies",
+          "Mention deployment, CI/CD, Docker, or cloud experience if applicable"
+        ],
+        "keywordMatch": 28,
+        "readabilityScore": 75
+      },
+      "createdAt": "2026-06-03T05:57:08.769Z",
+      "updatedAt": "2026-06-03T05:57:08.769Z"
+    },
+    {
+      "id": "e6461984-8d13-4270-ada1-981466fd6f4e",
+      "userId": "2590e69c-ec0e-4343-ab55-da5bf666e718",
+      "title": "Resume Analysis - 4.pdf",
+      "type": "RESUME_ANALYSIS",
+      "content": {
+        "skills": [
+          {
+            "name": "JavaScript",
+            "count": 1,
+            "label": "Detected",
+            "score": 47,
+            "category": "Frontend"
+          }
+        ],
+        "atsScore": 38,
+        "fileName": "4.pdf",
+        "resumeId": "5e98a873-612f-4622-94a9-326836fcec21",
+        "strengths": [
+          "Resume structure is readable",
+          "Contains measurable achievements"
+        ],
+        "analysisId": "2841ab7c-fe27-473f-bcd6-83503b2c58b7",
+        "weaknesses": [
+          "Limited detected technical skills"
+        ],
+        "generatedAt": "2026-06-03T05:57:06.907Z",
+        "suggestions": [
+          "Add a dedicated technical skills section with relevant tools and technologies",
+          "Mention deployment, CI/CD, Docker, or cloud experience if applicable"
+        ],
+        "keywordMatch": 28,
+        "readabilityScore": 75
+      },
+      "createdAt": "2026-06-03T05:57:06.909Z",
+      "updatedAt": "2026-06-03T05:57:06.909Z"
+    }
+  ],
+  "appSettings": [],
+  "dashboardStatCache": [
+    {
+      "id": "7b91a011-8687-4231-b8a4-2fdd496eb3db",
+      "userId": "2590e69c-ec0e-4343-ab55-da5bf666e718",
+      "totalResumes": 1,
+      "analyzedResumes": 1,
+      "avgAtsScore": 38,
+      "topSkills": [
+        {
+          "name": "JavaScript",
+          "count": 2,
+          "score": 47
+        }
+      ],
+      "reportCount": 2,
+      "updatedAt": "2026-06-03T05:57:08.774Z"
+    }
+  ]
+}

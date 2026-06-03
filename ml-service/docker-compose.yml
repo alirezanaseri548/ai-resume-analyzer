@@ -1,0 +1,11 @@
+﻿services:
+  ml-service:
+    build: .
+    container_name: ai-resume-ml-service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+    environment:
+      - MODEL_NAME=all-MiniLM-L6-v2
+    restart: always
