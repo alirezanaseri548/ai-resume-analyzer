@@ -115,7 +115,7 @@ The following files are ignored and should not be pushed:
 - 
 ode_modules
 - dist
-- uild
+- build
 - temporary files
 - backup files
 - runtime uploads
