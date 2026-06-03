@@ -2,16 +2,6 @@
 
 A full-stack AI-powered resume analyzer project.
 
-## فارسی
-
-این پروژه شامل سه بخش اصلی است:
-
-- **Frontend:** React
-- **Backend:** NestJS + Prisma
-- **ML Service:** FastAPI
-- **Database:** PostgreSQL
-
-## English
 
 This project contains:
 
