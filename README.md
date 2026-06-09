@@ -1,5 +1,5 @@
 ﻿# AI Resume Analyzer
-
+![Project Preview](./assets/preview.png)
 A full-stack AI-powered resume analyzer project.
 
 
