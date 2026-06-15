@@ -1,49 +1,47 @@
-﻿# AI Resume Analyzer
+# AI Resume Analyzer
+
+A full-stack AI-powered resume analyzer that helps users evaluate resumes, calculate ATS scores, extract skills, and generate improvement insights.
+
+## Preview
+
 ![Project Preview](preview.png)
-A full-stack AI-powered resume analyzer project.
 
+## Tech Stack
 
-This project contains:
+- Frontend: React
+- Backend: NestJS + Prisma
+- ML Service: FastAPI
+- Database: PostgreSQL
+- ORM: Prisma
 
-- **Frontend:** React
-- **Backend:** NestJS + Prisma
-- **ML Service:** FastAPI
-- **Database:** PostgreSQL
+## Features
 
----
+- Upload and analyze resumes
+- Extract skills and keywords
+- Calculate ATS score
+- Show resume insights
+- Store analysis results in PostgreSQL
+- Separate ML service for AI/ML processing
 
 ## Project Structure
-`	ext
-frontend/
-backend/
-ml-service/
+```text
+ai-resume-analyzer/
+├── frontend/
+├── backend/
+├── ml-service/
+├── docker-compose.db.yml
+├── SAMPLE_DATA.md
+└── README.md
 
----
+## Getting Started
 
-## Environment Files
-
-Before running the project, create real .env files based on:
-
-text
-backend/.env.example
-frontend/.env.example
-ml-service/.env.example
-
-Real .env files are ignored by Git for security.
-
----
-
-## Database
-
-The project uses PostgreSQL with Prisma.
-
-### Run PostgreSQL
+### 1. Clone the repository
 
 bash
-cd backend
-docker compose up -d
+git clone https://github.com/alirezanaseri548/ai-resume-analyzer.git
+cd ai-resume-analyzer
 
-### Prisma Setup
+### 2. Setup Backend
 
 bash
 cd backend
@@ -51,80 +49,73 @@ npm install
 npx prisma generate
 npx prisma migrate dev
 npm run seed
-
-Sample data is available through Prisma seed files.
-
-More details:
-
-text
-SAMPLE_DATA.md
-backend/prisma/schema.prisma
-backend/prisma/seed.js
-backend/prisma/seed.ts
-
----
-
-## Backend
-
-bash
-cd backend
-npm install
 npm run start:dev
 
-Default backend URL:
+Backend runs at:
 
 text
 http://localhost:3000
 
----
-
-## Frontend
+### 3. Setup Frontend
 
 bash
 cd frontend
 npm install
 npm run dev
 
-Default frontend URL:
+Frontend runs at:
 
 text
 http://localhost:5173
 
----
-
-## ML Service
+### 4. Setup ML Service
 
 bash
 cd ml-service
 pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
-Default ML service URL:
+ML service runs at:
 
 text
 http://localhost:8000
 
----
+## Environment Variables
 
-## Security Notes
-
-The following files are ignored and should not be pushed:
-
-- .env
-- .env.*
-- 
-ode_modules
-- dist
-- build
-- temporary files
-- backup files
-- runtime uploads
-
-Use .env.example files for public configuration examples.
-
----
-
-## GitHub Repository
+Create `.env` files based on the example files:
 
 text
-https://github.com/alirezanaseri548/ai-resume-analyzer
+backend/.env.example
+frontend/.env.example
+ml-service/.env.example
+
+Do not commit real `.env` files.
+
+## Contributing
+
+Contributions are welcome. Please check the open issues and create a pull request.
+
+## License
+
+This project is licensed under the MIT License.
+
+
+2. Topic اضافه کن
+
+برو صفحه اصلی ریپو، قسمت راست `About`، روی آیکن چرخ‌دنده بزن و این topicها را اضافه کن:
+
+```text
+resume-analyzer
+resume-parser
+ai
+ats
+ats-score
+career
+job-search
+react
+nestjs
+fastapi
+prisma
+postgresql
+machine-learning
+open-source
