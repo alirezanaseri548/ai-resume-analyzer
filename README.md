@@ -1,49 +1,63 @@
 ﻿# AI Resume Analyzer
+
+A full-stack AI-powered resume analyzer that helps users analyze resumes, calculate ATS scores, extract skills, and generate improvement insights.
+
+## Preview
+
 ![Project Preview](preview.png)
-A full-stack AI-powered resume analyzer project.
 
+## Tech Stack
 
-This project contains:
+- Frontend: React
+- Backend: NestJS + Prisma
+- ML Service: FastAPI
+- Database: PostgreSQL
+- ORM: Prisma
 
-- **Frontend:** React
-- **Backend:** NestJS + Prisma
-- **ML Service:** FastAPI
-- **Database:** PostgreSQL
+## Features
 
----
+- Upload and analyze resumes
+- Extract resume skills and keywords
+- Calculate ATS score
+- Generate resume improvement insights
+- Store analysis results in PostgreSQL
+- Use a separate FastAPI ML service
 
 ## Project Structure
-`	ext
-frontend/
-backend/
-ml-service/
+```text
+ai-resume-analyzer/
+|-- frontend/
+|-- backend/
+|-- ml-service/
+|-- docker-compose.db.yml
+|-- SAMPLE_DATA.md
+`-- README.md
 
----
+## Getting Started
 
-## Environment Files
+### 1. Clone the repository
 
-Before running the project, create real .env files based on:
+bash
+git clone https://github.com/alirezanaseri548/ai-resume-analyzer.git
+cd ai-resume-analyzer
+
+### 2. Environment Variables
+
+Create real `.env` files based on the example files:
 
 text
 backend/.env.example
 frontend/.env.example
 ml-service/.env.example
 
-Real .env files are ignored by Git for security.
+Do not commit real `.env` files.
 
----
-
-## Database
-
-The project uses PostgreSQL with Prisma.
-
-### Run PostgreSQL
+### 3. Start PostgreSQL
 
 bash
-cd backend
-docker compose up -d
+docker compose -f docker-compose.db.yml up -d
 
-### Prisma Setup
+### 4. Setup Backend
 
 bash
 cd backend
@@ -51,24 +65,6 @@ npm install
 npx prisma generate
 npx prisma migrate dev
 npm run seed
-
-Sample data is available through Prisma seed files.
-
-More details:
-
-text
-SAMPLE_DATA.md
-backend/prisma/schema.prisma
-backend/prisma/seed.js
-backend/prisma/seed.ts
-
----
-
-## Backend
-
-bash
-cd backend
-npm install
 npm run start:dev
 
 Default backend URL:
@@ -76,9 +72,7 @@ Default backend URL:
 text
 http://localhost:3000
 
----
-
-## Frontend
+### 5. Setup Frontend
 
 bash
 cd frontend
@@ -90,9 +84,7 @@ Default frontend URL:
 text
 http://localhost:5173
 
----
-
-## ML Service
+### 6. Setup ML Service
 
 bash
 cd ml-service
@@ -104,27 +96,38 @@ Default ML service URL:
 text
 http://localhost:8000
 
----
+## Sample Data
+
+Sample data and seed instructions are available in:
+
+text
+SAMPLE_DATA.md
+backend/prisma/schema.prisma
+backend/prisma/seed.js
+backend/prisma/seed.ts
 
 ## Security Notes
 
-The following files are ignored and should not be pushed:
-
-- .env
-- .env.*
-- 
-ode_modules
-- dist
-- build
-- temporary files
-- backup files
-- runtime uploads
-
-Use .env.example files for public configuration examples.
-
----
-
-## GitHub Repository
+The following files should not be committed:
 
 text
-https://github.com/alirezanaseri548/ai-resume-analyzer
+.env
+.env.*
+node_modules
+dist
+build
+temporary files
+backup files
+runtime uploads
+
+Use `.env.example` files for public configuration examples.
+
+## Contributing
+
+Contributions are welcome.
+
+Please read `CONTRIBUTING.md` before opening a pull request.
+
+## License
+
+This project is licensed under the MIT License.

@@ -1,4 +1,4 @@
----
+﻿---
 name: Feature request
 about: Suggest a new feature
 title: "feat: "
@@ -26,4 +26,3 @@ How should it work?
 ## Additional context
 
 Add any other context, screenshots, or examples.
-`

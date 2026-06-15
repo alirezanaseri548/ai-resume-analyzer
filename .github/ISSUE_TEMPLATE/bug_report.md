@@ -1,4 +1,4 @@
----
+﻿---
 name: Bug report
 about: Report a bug
 title: "bug: "
@@ -33,4 +33,3 @@ Add screenshots if needed.
 - Browser:
 - Node version:
 - Python version:
-`
