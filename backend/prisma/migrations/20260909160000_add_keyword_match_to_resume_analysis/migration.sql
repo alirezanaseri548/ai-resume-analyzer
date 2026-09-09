@@ -1,0 +1,1 @@
+ALTER TABLE "ResumeAnalysis" ADD COLUMN "keywordMatch" DOUBLE PRECISION;

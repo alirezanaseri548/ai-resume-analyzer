@@ -49,10 +49,6 @@ export default function DashboardLayout() {
   const [headerUser, setHeaderUser] = useState(() => readAuthUser())
 
   useEffect(() => {
-    setHeaderUser(readAuthUser())
-  }, [location.pathname])
-
-  useEffect(() => {
     function syncUser() {
       setHeaderUser(readAuthUser())
     }

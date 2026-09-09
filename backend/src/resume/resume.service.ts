@@ -2,7 +2,7 @@
   BadRequestException,
   Injectable,
   NotFoundException,
-  ForbiddenException
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -25,6 +25,13 @@ type SkillScore = {
   label: string;
 };
 
+type JobMatchResult = {
+  matchScore: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  improvementTips: string[];
+};
+
 @Injectable()
 export class ResumeService {
   constructor(private readonly prisma: PrismaService) {}
@@ -42,11 +49,18 @@ export class ResumeService {
           orderBy: { createdAt: 'desc' },
           take: 1,
         },
+        jobMatches: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
       },
     });
   }
 
-  async uploadResume(file: Express.Multer.File, userId: string): Promise<Resume> {
+  async uploadResume(
+    file: Express.Multer.File,
+    userId: string,
+  ): Promise<Resume> {
     if (!userId) {
       throw new ForbiddenException('User not authenticated');
     }
@@ -104,7 +118,11 @@ export class ResumeService {
     return resume;
   }
 
-  async analyzeResume(resumeId: string, userId: string): Promise<ResumeAnalysis> {
+  async analyzeResume(
+    resumeId: string,
+    userId: string,
+    jobDescription?: string,
+  ): Promise<ResumeAnalysis & { jobMatch?: JobMatch | null }> {
     if (!userId) {
       throw new ForbiddenException('User not authenticated');
     }
@@ -137,7 +155,13 @@ export class ResumeService {
 
     try {
       const extractedText = this.extractTextFromStoredFile(resume);
-      const result = this.ruleBasedAnalyze(extractedText, resume.originalFileName);
+      const normalizedJobDescription =
+        this.normalizeJobDescription(jobDescription);
+      const result = this.ruleBasedAnalyze(
+        extractedText,
+        resume.originalFileName,
+        normalizedJobDescription,
+      );
 
       const analysis = await this.prisma.resumeAnalysis.create({
         data: {
@@ -147,11 +171,23 @@ export class ResumeService {
           experienceSummary: result.experienceSummary,
           educationSummary: result.educationSummary,
           atsScore: result.atsScore,
+          keywordMatch: result.keywordMatch,
           strengths: result.strengths,
           weaknesses: result.weaknesses,
           suggestions: result.suggestions,
         },
       });
+
+      let jobMatch: JobMatch | null = null;
+      if (normalizedJobDescription) {
+        jobMatch = await this.createJobMatch(
+          resume,
+          userId,
+          normalizedJobDescription,
+          extractedText,
+          analysis.id,
+        );
+      }
 
       await this.prisma.resume.update({
         where: { id: resumeId },
@@ -167,6 +203,10 @@ export class ResumeService {
           metadata: {
             atsScore: result.atsScore,
             keywordMatch: result.keywordMatch,
+            jobMatchScore: jobMatch?.matchScore ?? null,
+            matchedSkills: jobMatch?.matchedSkills ?? [],
+            missingSkills: jobMatch?.missingSkills ?? [],
+            improvementTips: jobMatch?.improvementTips ?? [],
             readabilityScore: result.readabilityScore,
             skills: result.skills,
           },
@@ -189,6 +229,14 @@ export class ResumeService {
             strengths: result.strengths,
             weaknesses: result.weaknesses,
             suggestions: result.suggestions,
+            jobMatch: jobMatch
+              ? {
+                  matchScore: jobMatch.matchScore,
+                  matchedSkills: jobMatch.matchedSkills,
+                  missingSkills: jobMatch.missingSkills,
+                  improvementTips: jobMatch.improvementTips,
+                }
+              : null,
             generatedAt: new Date().toISOString(),
           },
         },
@@ -196,7 +244,7 @@ export class ResumeService {
 
       await this.refreshDashboardCache(userId);
 
-      return analysis;
+      return { ...analysis, jobMatch };
     } catch (error) {
       await this.prisma.resume.update({
         where: { id: resumeId },
@@ -216,6 +264,42 @@ export class ResumeService {
 
       throw error;
     }
+  }
+
+  async matchResumeToJob(
+    resumeId: string,
+    userId: string,
+    jobDescription?: string,
+  ): Promise<JobMatch> {
+    if (!userId) {
+      throw new ForbiddenException('User not authenticated');
+    }
+
+    const normalizedJobDescription =
+      this.normalizeJobDescription(jobDescription);
+    if (!normalizedJobDescription) {
+      throw new BadRequestException('Job description is required');
+    }
+
+    const resume = await this.prisma.resume.findUnique({
+      where: { id: resumeId },
+    });
+
+    if (!resume) {
+      throw new NotFoundException('Resume not found');
+    }
+
+    if (resume.userId !== userId) {
+      throw new ForbiddenException('You do not have access to this resume');
+    }
+
+    const extractedText = this.extractTextFromStoredFile(resume);
+    return this.createJobMatch(
+      resume,
+      userId,
+      normalizedJobDescription,
+      extractedText,
+    );
   }
 
   async getLatestAnalysisSummary(userId: string) {
@@ -248,19 +332,31 @@ export class ResumeService {
 
     const latest = analyses[0];
 
+    const latestJobMatch = await this.prisma.jobMatch.findFirst({
+      where: { resumeId: latest.resumeId },
+      orderBy: { createdAt: 'desc' },
+    });
+
     const averageAtsScore = Math.round(
-      analyses.reduce((sum, item) => sum + Number(item.atsScore || 0), 0) / analyses.length
+      analyses.reduce((sum, item) => sum + Number(item.atsScore || 0), 0) /
+        analyses.length,
     );
 
     const latestSkills = this.normalizeSkills(latest.skills);
-    const keywordMatch = this.calculateKeywordMatchFromSkills(latestSkills);
-    const readabilityScore = this.calculateReadabilityScore(latest.extractedText || '');
+    const keywordMatch = Number.isFinite(Number(latest.keywordMatch))
+      ? Math.round(Number(latest.keywordMatch))
+      : latestJobMatch?.matchScore != null
+        ? Math.round(Number(latestJobMatch.matchScore))
+        : this.calculateKeywordMatchFromSkills(latestSkills);
+    const readabilityScore = this.calculateReadabilityScore(
+      latest.extractedText || '',
+    );
 
     return {
       averageAtsScore,
       keywordMatch,
       readabilityScore,
-      latest,
+      latest: { ...latest, jobMatch: latestJobMatch },
     };
   }
 
@@ -288,7 +384,9 @@ export class ResumeService {
     });
 
     const totalResumes = resumes.length;
-    const analyzedResumes = resumes.filter((r) => r.status === ResumeStatus.ANALYZED).length;
+    const analyzedResumes = resumes.filter(
+      (r) => r.status === ResumeStatus.ANALYZED,
+    ).length;
 
     const scores = resumes
       .flatMap((r) => r.analyses)
@@ -296,10 +394,12 @@ export class ResumeService {
       .filter((x): x is number => typeof x === 'number');
 
     const avgAtsScore =
-      scores.length > 0 ? scores.reduce((sum, s) => sum + s, 0) / scores.length : 0;
+      scores.length > 0
+        ? scores.reduce((sum, s) => sum + s, 0) / scores.length
+        : 0;
 
     const allSkills = resumes.flatMap((r) =>
-      r.analyses.flatMap((a) => this.normalizeSkills(a.skills))
+      r.analyses.flatMap((a) => this.normalizeSkills(a.skills)),
     );
 
     const skillMap = new Map<string, { total: number; count: number }>();
@@ -362,35 +462,111 @@ export class ResumeService {
     return `${resume.originalFileName} ${cleaned}`.trim();
   }
 
-  private ruleBasedAnalyze(text: string, fileName: string) {
+  private ruleBasedAnalyze(
+    text: string,
+    fileName: string,
+    jobDescription = '',
+  ) {
     const normalizedText = `${fileName} ${text}`.toLowerCase();
 
-    const skillCatalog: Array<{ name: string; category: string; aliases: string[] }> = [
-      { name: 'JavaScript', category: 'Frontend', aliases: ['javascript', 'js', 'ecmascript'] },
-      { name: 'TypeScript', category: 'Frontend', aliases: ['typescript', 'ts'] },
-      { name: 'React', category: 'Frontend', aliases: ['react', 'reactjs', 'react.js'] },
-      { name: 'Next.js', category: 'Frontend', aliases: ['next.js', 'nextjs', 'next'] },
-      { name: 'Vue', category: 'Frontend', aliases: ['vue', 'vuejs', 'vue.js'] },
+    const skillCatalog: Array<{
+      name: string;
+      category: string;
+      aliases: string[];
+    }> = [
+      {
+        name: 'JavaScript',
+        category: 'Frontend',
+        aliases: ['javascript', 'js', 'ecmascript'],
+      },
+      {
+        name: 'TypeScript',
+        category: 'Frontend',
+        aliases: ['typescript', 'ts'],
+      },
+      {
+        name: 'React',
+        category: 'Frontend',
+        aliases: ['react', 'reactjs', 'react.js'],
+      },
+      {
+        name: 'Next.js',
+        category: 'Frontend',
+        aliases: ['next.js', 'nextjs', 'next'],
+      },
+      {
+        name: 'Vue',
+        category: 'Frontend',
+        aliases: ['vue', 'vuejs', 'vue.js'],
+      },
       { name: 'Angular', category: 'Frontend', aliases: ['angular'] },
       { name: 'HTML', category: 'Frontend', aliases: ['html', 'html5'] },
-      { name: 'CSS', category: 'Frontend', aliases: ['css', 'css3', 'scss', 'sass', 'tailwind'] },
-      { name: 'Node.js', category: 'Backend', aliases: ['node.js', 'nodejs', 'node'] },
+      {
+        name: 'CSS',
+        category: 'Frontend',
+        aliases: ['css', 'css3', 'scss', 'sass', 'tailwind'],
+      },
+      {
+        name: 'Node.js',
+        category: 'Backend',
+        aliases: ['node.js', 'nodejs', 'node'],
+      },
       { name: 'NestJS', category: 'Backend', aliases: ['nestjs', 'nest.js'] },
-      { name: 'Express', category: 'Backend', aliases: ['express', 'express.js'] },
-      { name: 'Python', category: 'Backend', aliases: ['python', 'django', 'flask', 'fastapi'] },
-      { name: 'Java', category: 'Backend', aliases: ['java', 'spring', 'spring boot'] },
-      { name: 'C#', category: 'Backend', aliases: ['c#', 'csharp', '.net', 'dotnet'] },
-      { name: 'SQL', category: 'Database', aliases: ['sql', 'postgresql', 'postgres', 'mysql', 'database'] },
+      {
+        name: 'Express',
+        category: 'Backend',
+        aliases: ['express', 'express.js'],
+      },
+      {
+        name: 'Python',
+        category: 'Backend',
+        aliases: ['python', 'django', 'flask', 'fastapi'],
+      },
+      {
+        name: 'Java',
+        category: 'Backend',
+        aliases: ['java', 'spring', 'spring boot'],
+      },
+      {
+        name: 'C#',
+        category: 'Backend',
+        aliases: ['c#', 'csharp', '.net', 'dotnet'],
+      },
+      {
+        name: 'SQL',
+        category: 'Database',
+        aliases: ['sql', 'postgresql', 'postgres', 'mysql', 'database'],
+      },
       { name: 'MongoDB', category: 'Database', aliases: ['mongodb', 'mongo'] },
       { name: 'Prisma', category: 'Database', aliases: ['prisma'] },
       { name: 'Docker', category: 'DevOps', aliases: ['docker', 'container'] },
-      { name: 'Kubernetes', category: 'DevOps', aliases: ['kubernetes', 'k8s'] },
-      { name: 'AWS', category: 'Cloud', aliases: ['aws', 'amazon web services'] },
+      {
+        name: 'Kubernetes',
+        category: 'DevOps',
+        aliases: ['kubernetes', 'k8s'],
+      },
+      {
+        name: 'AWS',
+        category: 'Cloud',
+        aliases: ['aws', 'amazon web services'],
+      },
       { name: 'Git', category: 'Tools', aliases: ['git', 'github', 'gitlab'] },
-      { name: 'REST API', category: 'Backend', aliases: ['rest api', 'restful', 'api'] },
+      {
+        name: 'REST API',
+        category: 'Backend',
+        aliases: ['rest api', 'restful', 'api'],
+      },
       { name: 'GraphQL', category: 'Backend', aliases: ['graphql'] },
-      { name: 'Testing', category: 'Quality', aliases: ['test', 'testing', 'jest', 'cypress', 'unit test'] },
-      { name: 'Machine Learning', category: 'AI', aliases: ['machine learning', 'ml', 'deep learning', 'ai'] },
+      {
+        name: 'Testing',
+        category: 'Quality',
+        aliases: ['test', 'testing', 'jest', 'cypress', 'unit test'],
+      },
+      {
+        name: 'Machine Learning',
+        category: 'AI',
+        aliases: ['machine learning', 'ml', 'deep learning', 'ai'],
+      },
     ];
 
     const skills: SkillScore[] = [];
@@ -403,9 +579,20 @@ export class ResumeService {
       }
 
       if (count > 0) {
-        const inExperience = this.hasNearSection(normalizedText, skill.aliases, ['experience', 'work', 'project', 'employment']);
-        const inSkills = this.hasNearSection(normalizedText, skill.aliases, ['skills', 'technical skills', 'technologies']);
-        const inProjects = this.hasNearSection(normalizedText, skill.aliases, ['project', 'portfolio']);
+        const inExperience = this.hasNearSection(
+          normalizedText,
+          skill.aliases,
+          ['experience', 'work', 'project', 'employment'],
+        );
+        const inSkills = this.hasNearSection(normalizedText, skill.aliases, [
+          'skills',
+          'technical skills',
+          'technologies',
+        ]);
+        const inProjects = this.hasNearSection(normalizedText, skill.aliases, [
+          'project',
+          'portfolio',
+        ]);
 
         let score = 35;
         score += Math.min(count * 12, 36);
@@ -427,15 +614,29 @@ export class ResumeService {
 
     const sortedSkills = skills.sort((a, b) => b.score - a.score);
 
-    const keywordMatch = this.calculateKeywordMatchFromSkills(sortedSkills);
+    const keywordMatch = jobDescription
+      ? this.calculateJobMatch(normalizedText, jobDescription).matchScore
+      : this.calculateKeywordMatchFromSkills(sortedSkills);
     const readabilityScore = this.calculateReadabilityScore(normalizedText);
     const structureScore = this.calculateStructureScore(normalizedText);
     const skillScore = sortedSkills.length
-      ? Math.round(sortedSkills.reduce((sum, s) => sum + s.score, 0) / sortedSkills.length)
+      ? Math.round(
+          sortedSkills.reduce((sum, s) => sum + s.score, 0) /
+            sortedSkills.length,
+        )
       : 0;
 
     const atsScore = Math.round(
-      Math.min(100, Math.max(0, keywordMatch * 0.35 + readabilityScore * 0.25 + structureScore * 0.2 + skillScore * 0.2))
+      Math.min(
+        100,
+        Math.max(
+          0,
+          keywordMatch * 0.35 +
+            readabilityScore * 0.25 +
+            structureScore * 0.2 +
+            skillScore * 0.2,
+        ),
+      ),
     );
 
     const strengths: string[] = [];
@@ -446,25 +647,41 @@ export class ResumeService {
       strengths.push('Good technical skill coverage');
     } else {
       weaknesses.push('Limited detected technical skills');
-      suggestions.push('Add a dedicated technical skills section with relevant tools and technologies');
+      suggestions.push(
+        'Add a dedicated technical skills section with relevant tools and technologies',
+      );
     }
 
     if (readabilityScore >= 75) {
       strengths.push('Resume structure is readable');
     } else {
       weaknesses.push('Resume readability can be improved');
-      suggestions.push('Use clearer sections, bullet points, and shorter descriptions');
+      suggestions.push(
+        'Use clearer sections, bullet points, and shorter descriptions',
+      );
     }
 
     if (this.hasNumbers(normalizedText)) {
       strengths.push('Contains measurable achievements');
     } else {
       weaknesses.push('Missing quantified achievements');
-      suggestions.push('Add numbers such as percentage improvements, revenue impact, or project scale');
+      suggestions.push(
+        'Add numbers such as percentage improvements, revenue impact, or project scale',
+      );
     }
 
-    if (!this.includesAny(normalizedText, ['ci/cd', 'deployment', 'docker', 'cloud', 'aws'])) {
-      suggestions.push('Mention deployment, CI/CD, Docker, or cloud experience if applicable');
+    if (
+      !this.includesAny(normalizedText, [
+        'ci/cd',
+        'deployment',
+        'docker',
+        'cloud',
+        'aws',
+      ])
+    ) {
+      suggestions.push(
+        'Mention deployment, CI/CD, Docker, or cloud experience if applicable',
+      );
     }
 
     return {
@@ -476,19 +693,313 @@ export class ResumeService {
       strengths,
       weaknesses,
       suggestions,
-      experienceSummary: this.includesAny(normalizedText, ['experience', 'work', 'employment', 'project'])
+      experienceSummary: this.includesAny(normalizedText, [
+        'experience',
+        'work',
+        'employment',
+        'project',
+      ])
         ? 'Experience or project-related content was detected.'
         : 'Experience section is limited or not clearly detected.',
-      educationSummary: this.includesAny(normalizedText, ['education', 'university', 'college', 'degree', 'bachelor', 'master'])
+      educationSummary: this.includesAny(normalizedText, [
+        'education',
+        'university',
+        'college',
+        'degree',
+        'bachelor',
+        'master',
+      ])
         ? 'Education-related information was detected.'
         : 'Education section is limited or not clearly detected.',
     };
   }
 
+  private normalizeJobDescription(jobDescription?: string): string {
+    const value =
+      typeof jobDescription === 'string' ? jobDescription.trim() : '';
+    if (value.length > 20000) {
+      throw new BadRequestException(
+        'Job description must be 20,000 characters or fewer.',
+      );
+    }
+    return value;
+  }
+
+  private async createJobMatch(
+    resume: Resume,
+    userId: string,
+    jobDescription: string,
+    extractedText: string,
+    analysisId?: string,
+  ): Promise<JobMatch> {
+    const result = this.calculateJobMatch(extractedText, jobDescription);
+
+    const jobMatch = await this.prisma.jobMatch.create({
+      data: {
+        resumeId: resume.id,
+        jobDescription,
+        matchScore: result.matchScore,
+        missingSkills: result.missingSkills,
+        matchedSkills: result.matchedSkills,
+        improvementTips: result.improvementTips,
+      },
+    });
+
+    await this.prisma.analysisHistory.create({
+      data: {
+        userId,
+        resumeId: resume.id,
+        analysisId,
+        eventType: HistoryEventType.MATCHED_TO_JOB,
+        metadata: {
+          matchScore: result.matchScore,
+          matchedSkills: result.matchedSkills,
+          missingSkills: result.missingSkills,
+        },
+      },
+    });
+
+    return jobMatch;
+  }
+
+  private calculateJobMatch(
+    resumeText: string,
+    jobDescription: string,
+  ): JobMatchResult {
+    const resumeNormalized = resumeText.toLowerCase();
+    const jobNormalized = jobDescription.toLowerCase();
+    const catalog = this.getSkillCatalog();
+
+    const requiredSkills = catalog.filter((skill) =>
+      skill.aliases.some((alias) => this.containsKeyword(jobNormalized, alias)),
+    );
+
+    const matchedSkills = requiredSkills
+      .filter((skill) =>
+        skill.aliases.some((alias) =>
+          this.containsKeyword(resumeNormalized, alias),
+        ),
+      )
+      .map((skill) => skill.name);
+    const missingSkills = requiredSkills
+      .filter(
+        (skill) =>
+          !skill.aliases.some((alias) =>
+            this.containsKeyword(resumeNormalized, alias),
+          ),
+      )
+      .map((skill) => skill.name);
+
+    const jobKeywords = this.extractMeaningfulKeywords(jobDescription);
+    const matchedKeywords = jobKeywords.filter((keyword) =>
+      this.containsKeyword(resumeNormalized, keyword),
+    );
+    const missingKeywords = jobKeywords.filter(
+      (keyword) => !this.containsKeyword(resumeNormalized, keyword),
+    );
+
+    // Prefer recognizable technical skills, but fall back to meaningful
+    // job-description keywords when the posting contains no catalog skills.
+    const denominator = requiredSkills.length || jobKeywords.length;
+    const numerator = requiredSkills.length
+      ? matchedSkills.length
+      : matchedKeywords.length;
+    const matchScore = denominator
+      ? Math.round((numerator / denominator) * 100)
+      : 0;
+
+    const matchedItems = requiredSkills.length ? matchedSkills : matchedKeywords;
+    const missingItems = requiredSkills.length ? missingSkills : missingKeywords;
+    const combinedMissing = Array.from(new Set(missingItems)).slice(0, 20);
+    const combinedMatched = Array.from(new Set(matchedItems)).slice(0, 20);
+
+    const improvementTips = combinedMissing.length
+      ? [
+          `Consider adding relevant experience or keywords for: ${combinedMissing.slice(0, 8).join(', ')}.`,
+          'Tailor the resume summary and recent experience bullets to this role.',
+        ]
+      : [
+          'The resume covers the main keywords detected in this job description.',
+        ];
+
+    return {
+      matchScore,
+      matchedSkills: combinedMatched,
+      missingSkills: combinedMissing,
+      improvementTips,
+    };
+  }
+
+  private containsKeyword(text: string, keyword: string): boolean {
+    const normalizedKeyword = keyword.toLowerCase().trim();
+    if (!normalizedKeyword) return false;
+
+    if (normalizedKeyword.includes(' ')) {
+      return text.includes(normalizedKeyword);
+    }
+
+    return new RegExp(
+      `(^|[^a-z0-9+#.])${normalizedKeyword.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}(?=$|[^a-z0-9+#.])`,
+      'i',
+    ).test(text);
+  }
+
+  private extractMeaningfulKeywords(text: string): string[] {
+    const stopWords = new Set([
+      'and',
+      'the',
+      'for',
+      'with',
+      'from',
+      'that',
+      'this',
+      'your',
+      'you',
+      'our',
+      'are',
+      'will',
+      'have',
+      'has',
+      'into',
+      'about',
+      'role',
+      'work',
+      'years',
+      'year',
+      'team',
+      'using',
+      'looking',
+      'must',
+      'should',
+      'their',
+      'job',
+      'description',
+      'responsibilities',
+      'requirements',
+      'experience',
+    ]);
+
+    return Array.from(
+      new Set(
+        text
+          .toLowerCase()
+          .replace(/[^a-z0-9+#.\s-]/g, ' ')
+          .split(/\s+/)
+          .map((word) => word.replace(/^[-.]+|[-.]+$/g, ''))
+          .filter((word) => word.length >= 3 && !stopWords.has(word)),
+      ),
+    ).slice(0, 80);
+  }
+
+  private getSkillCatalog(): Array<{
+    name: string;
+    category: string;
+    aliases: string[];
+  }> {
+    return [
+      {
+        name: 'JavaScript',
+        category: 'Frontend',
+        aliases: ['javascript', 'js', 'ecmascript'],
+      },
+      {
+        name: 'TypeScript',
+        category: 'Frontend',
+        aliases: ['typescript', 'ts'],
+      },
+      {
+        name: 'React',
+        category: 'Frontend',
+        aliases: ['react', 'reactjs', 'react.js'],
+      },
+      {
+        name: 'Next.js',
+        category: 'Frontend',
+        aliases: ['next.js', 'nextjs', 'next'],
+      },
+      {
+        name: 'Vue',
+        category: 'Frontend',
+        aliases: ['vue', 'vuejs', 'vue.js'],
+      },
+      { name: 'Angular', category: 'Frontend', aliases: ['angular'] },
+      { name: 'HTML', category: 'Frontend', aliases: ['html', 'html5'] },
+      {
+        name: 'CSS',
+        category: 'Frontend',
+        aliases: ['css', 'css3', 'scss', 'sass', 'tailwind'],
+      },
+      {
+        name: 'Node.js',
+        category: 'Backend',
+        aliases: ['node.js', 'nodejs', 'node'],
+      },
+      { name: 'NestJS', category: 'Backend', aliases: ['nestjs', 'nest.js'] },
+      {
+        name: 'Express',
+        category: 'Backend',
+        aliases: ['express', 'express.js'],
+      },
+      {
+        name: 'Python',
+        category: 'Backend',
+        aliases: ['python', 'django', 'flask', 'fastapi'],
+      },
+      {
+        name: 'Java',
+        category: 'Backend',
+        aliases: ['java', 'spring', 'spring boot'],
+      },
+      {
+        name: 'C#',
+        category: 'Backend',
+        aliases: ['c#', 'csharp', '.net', 'dotnet'],
+      },
+      {
+        name: 'SQL',
+        category: 'Database',
+        aliases: ['sql', 'postgresql', 'postgres', 'mysql', 'database'],
+      },
+      { name: 'MongoDB', category: 'Database', aliases: ['mongodb', 'mongo'] },
+      { name: 'Prisma', category: 'Database', aliases: ['prisma'] },
+      { name: 'Docker', category: 'DevOps', aliases: ['docker', 'container'] },
+      {
+        name: 'Kubernetes',
+        category: 'DevOps',
+        aliases: ['kubernetes', 'k8s'],
+      },
+      {
+        name: 'AWS',
+        category: 'Cloud',
+        aliases: ['aws', 'amazon web services'],
+      },
+      { name: 'Git', category: 'Tools', aliases: ['git', 'github', 'gitlab'] },
+      {
+        name: 'REST API',
+        category: 'Backend',
+        aliases: ['rest api', 'restful', 'api'],
+      },
+      { name: 'GraphQL', category: 'Backend', aliases: ['graphql'] },
+      {
+        name: 'Testing',
+        category: 'Quality',
+        aliases: ['test', 'testing', 'jest', 'cypress', 'unit test'],
+      },
+      {
+        name: 'Machine Learning',
+        category: 'AI',
+        aliases: ['machine learning', 'ml', 'deep learning', 'ai'],
+      },
+    ];
+  }
+
   private countOccurrences(text: string, term: string): number {
     if (!term) return 0;
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(^|[^a-z0-9+#.])${escaped}([^a-z0-9+#.]|$)`, 'gi');
+    const regex = new RegExp(
+      `(^|[^a-z0-9+#.])${escaped}([^a-z0-9+#.]|$)`,
+      'gi',
+    );
     return (text.match(regex) || []).length;
   }
 
@@ -497,10 +1008,16 @@ export class ResumeService {
   }
 
   private hasNumbers(text: string): boolean {
-    return /\d+(\.\d+)?\s*(%|percent|users|clients|projects|years|months|revenue|sales|requests|records)?/i.test(text);
+    return /\d+(\.\d+)?\s*(%|percent|users|clients|projects|years|months|revenue|sales|requests|records)?/i.test(
+      text,
+    );
   }
 
-  private hasNearSection(text: string, aliases: string[], sections: string[]): boolean {
+  private hasNearSection(
+    text: string,
+    aliases: string[],
+    sections: string[],
+  ): boolean {
     for (const section of sections) {
       const sectionIndex = text.indexOf(section.toLowerCase());
       if (sectionIndex === -1) continue;
@@ -518,10 +1035,23 @@ export class ResumeService {
   private calculateKeywordMatchFromSkills(skills: SkillScore[]): number {
     if (!skills.length) return 0;
 
-    const important = ['JavaScript', 'TypeScript', 'React', 'Node.js', 'SQL', 'Git', 'REST API', 'Testing'];
-    const detectedImportant = skills.filter((s) => important.includes(s.name)).length;
+    const important = [
+      'JavaScript',
+      'TypeScript',
+      'React',
+      'Node.js',
+      'SQL',
+      'Git',
+      'REST API',
+      'Testing',
+    ];
+    const detectedImportant = skills.filter((s) =>
+      important.includes(s.name),
+    ).length;
     const coverage = Math.round((detectedImportant / important.length) * 100);
-    const averageSkill = Math.round(skills.reduce((sum, s) => sum + s.score, 0) / skills.length);
+    const averageSkill = Math.round(
+      skills.reduce((sum, s) => sum + s.score, 0) / skills.length,
+    );
 
     return Math.round(Math.min(100, coverage * 0.55 + averageSkill * 0.45));
   }
@@ -533,11 +1063,15 @@ export class ResumeService {
 
     if (text.length > 500) score += 15;
     if (text.length > 1200) score += 10;
-    if (this.includesAny(text, ['summary', 'profile', 'objective'])) score += 10;
-    if (this.includesAny(text, ['experience', 'work', 'employment'])) score += 15;
+    if (this.includesAny(text, ['summary', 'profile', 'objective']))
+      score += 10;
+    if (this.includesAny(text, ['experience', 'work', 'employment']))
+      score += 15;
     if (this.includesAny(text, ['skills', 'technical skills'])) score += 15;
-    if (this.includesAny(text, ['education', 'university', 'degree'])) score += 10;
-    if (text.includes('•') || text.includes('- ') || text.includes('* ')) score += 10;
+    if (this.includesAny(text, ['education', 'university', 'degree']))
+      score += 10;
+    if (text.includes('•') || text.includes('- ') || text.includes('* '))
+      score += 10;
     if (this.hasNumbers(text)) score += 10;
 
     return Math.min(100, score);
@@ -546,10 +1080,13 @@ export class ResumeService {
   private calculateStructureScore(text: string): number {
     let score = 0;
 
-    if (this.includesAny(text, ['summary', 'profile', 'objective'])) score += 20;
-    if (this.includesAny(text, ['experience', 'work', 'employment'])) score += 25;
+    if (this.includesAny(text, ['summary', 'profile', 'objective']))
+      score += 20;
+    if (this.includesAny(text, ['experience', 'work', 'employment']))
+      score += 25;
     if (this.includesAny(text, ['skills', 'technical skills'])) score += 25;
-    if (this.includesAny(text, ['education', 'university', 'degree'])) score += 15;
+    if (this.includesAny(text, ['education', 'university', 'degree']))
+      score += 15;
     if (this.includesAny(text, ['project', 'portfolio'])) score += 15;
 
     return Math.min(100, score);
@@ -573,7 +1110,9 @@ export class ResumeService {
 
           return {
             name: item.name || item.skill || item.title || '',
-            score: Math.round(Number(item.score || item.confidence || item.level || 60)),
+            score: Math.round(
+              Number(item.score || item.confidence || item.level || 60),
+            ),
             count: Number(item.count || 1),
             category: item.category || 'General',
             label: item.label || 'Detected',

@@ -30,7 +30,7 @@ export class ResumeController {
     const userId = req.user?.id;
 
     if (!userId) {
-      throw new UnauthorizedException("User not authenticated");
+      throw new UnauthorizedException('User not authenticated');
     }
 
     return userId;
@@ -69,29 +69,45 @@ export class ResumeController {
     const userId = this.getUserId(req);
 
     if (!file) {
-      throw new BadRequestException("Resume file is required");
+      throw new BadRequestException('Resume file is required');
     }
 
     return this.resumeService.uploadResume(file, userId);
   }
 
-  @Post(":id/analyze")
-  async analyze(@Param("id") id: string, @Req() req: any) {
+  @Post(':id/analyze')
+  async analyze(
+    @Param('id') id: string,
+    @Body() body: AnalyzeResumeDto,
+    @Req() req: any,
+  ) {
     const userId = this.getUserId(req);
-    return this.resumeService.analyzeResume(id, userId);
+    return this.resumeService.analyzeResume(id, userId, body?.jobDescription);
   }
 
-  @Get("analysis/latest")
+  @Post(':id/match')
+  async match(
+    @Param('id') id: string,
+    @Body() body: AnalyzeResumeDto,
+    @Req() req: any,
+  ) {
+    const userId = this.getUserId(req);
+    return this.resumeService.matchResumeToJob(
+      id,
+      userId,
+      body?.jobDescription,
+    );
+  }
+
+  @Get('analysis/latest')
   async latestAnalysis(@Req() req: any) {
     const userId = this.getUserId(req);
     return this.resumeService.getLatestAnalysisSummary(userId);
   }
 
-  @Get("history/all")
+  @Get('history/all')
   async history(@Req() req: any) {
     const userId = this.getUserId(req);
     return this.resumeService.getHistory(userId);
   }
 }
-
-

@@ -9,8 +9,15 @@ export async function uploadResume(formData, config = {}) {
   return data;
 }
 
-export async function analyzeResume(id) {
-  const { data } = await api.post(`/resumes/${id}/analyze`);
+export async function analyzeResume(id, jobDescription = '') {
+  const { data } = await api.post(`/resumes/${id}/analyze`, {
+    jobDescription: jobDescription?.trim() || undefined,
+  });
+  return data;
+}
+
+export async function matchResumeToJob(id, jobDescription) {
+  const { data } = await api.post(`/resumes/${id}/match`, { jobDescription });
   return data;
 }
 

@@ -13,8 +13,17 @@ export async function uploadResume(file) {
   return res.data
 }
 
-export async function analyzeResume(resumeId) {
-  const res = await api.post(`/resumes/${resumeId}/analyze`)
+export async function analyzeResume(resumeId, jobDescription = "") {
+  const res = await api.post(`/resumes/${resumeId}/analyze`, {
+    jobDescription: jobDescription?.trim() || undefined,
+  })
+  return res.data
+}
+
+export async function matchResumeToJob(resumeId, jobDescription) {
+  const res = await api.post(`/resumes/${resumeId}/match`, {
+    jobDescription,
+  })
   return res.data
 }
 

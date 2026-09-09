@@ -65,6 +65,7 @@ model ResumeAnalysis {
   experienceSummary String?
   educationSummary  String?
   atsScore          Float?
+  keywordMatch      Float?
   strengths         Json?
   weaknesses        Json?
   suggestions       Json?

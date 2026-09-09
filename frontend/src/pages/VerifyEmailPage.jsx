@@ -2,19 +2,20 @@ import { useEffect, useState } from "react";
 import { verifyEmail } from "../api/user";
 
 export default function VerifyEmailPage() {
-  const [message, setMessage] = useState("Verifying...");
+  const token = new URLSearchParams(window.location.search).get("token");
+  const [message, setMessage] = useState(() =>
+    token ? "Verifying..." : "Missing token",
+  );
 
   useEffect(() => {
-    const token = new URLSearchParams(window.location.search).get("token");
     if (!token) {
-      setMessage("Missing token");
       return;
     }
 
     verifyEmail(token)
       .then((res) => setMessage(res.message || "Email verified"))
       .catch((e) => setMessage(e.message));
-  }, []);
+  }, [token]);
 
   return (
     <div className="p-6 text-white">

@@ -17,5 +17,10 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // React 17+ does not require the default React import for JSX.
+      // Keep the rule quiet for the existing files that still import it.
+      "no-unused-vars": ["error", { varsIgnorePattern: "^React$" }],
+    },
   },
 ])
