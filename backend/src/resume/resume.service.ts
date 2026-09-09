@@ -10,10 +10,12 @@ import {
   ResumeAnalysis,
   ResumeStatus,
   HistoryEventType,
-  ReportType
+  ReportType,
+  JobMatch,
 } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import { MAX_RESUME_FILE_SIZE, validateResumeFile } from './resume.constants';
 
 type SkillScore = {
   name: string;
@@ -49,8 +51,18 @@ export class ResumeService {
       throw new ForbiddenException('User not authenticated');
     }
 
-    if (!file) {
-      throw new BadRequestException('Resume file is required');
+    const fileValidationError = validateResumeFile(file);
+    if (fileValidationError) {
+      throw new BadRequestException(fileValidationError);
+    }
+
+    // Keep this guard in the service as well as the Multer interceptor so
+    // uploads are safe when the service is called directly (for example in
+    // tests or from another Nest provider).
+    if (Number(file.size || 0) > MAX_RESUME_FILE_SIZE) {
+      throw new BadRequestException(
+        'Resume file is too large. Maximum size is 10 MB.',
+      );
     }
 
     const uploadDir = path.join(process.cwd(), 'uploads');
