@@ -148,7 +148,7 @@ export default function ResumesPage() {
           </label>
 
           <div className="file-meta">
-            {file ? `${formatFileSize(file.size)} · Ready to analyze` : "PDF, DOCX, or TXT · Max 10 MB"}
+            {file ? `${formatFileSize(file.size)} - Ready to analyze` : "PDF, DOCX, or TXT - Max 10 MB"}
           </div>
 
           <label className="form-field upload-job-field">
