@@ -1,16 +1,28 @@
-# React + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The frontend is a React + Vite application for uploading resumes, reviewing ATS analysis, comparing a resume with a job description, and downloading PDF reports.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+From this directory:
 
-## React Compiler
+```powershell
+npm install
+Copy-Item .env.example .env
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Set `VITE_API_BASE_URL` in `.env` when the backend is not running at the default `http://localhost:3001/api`.
 
-## Expanding the ESLint configuration
+## Run and validate
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```powershell
+npm run dev
+npm run lint
+npm run build
+```
+
+The development app is normally available at `http://localhost:5173`.
+
+## Supported uploads
+
+The file picker accepts `.pdf`, `.docx`, and `.txt` resumes up to 10 MB. The same validation is repeated by the backend so invalid files are not persisted.

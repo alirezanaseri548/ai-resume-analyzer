@@ -1,5 +1,3 @@
-﻿version: "3.9"
-
 services:
   postgres:
     image: postgres:15
@@ -8,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ai_resume
+      POSTGRES_DB: ai_resume_analyzer
     ports:
       - "5432:5432"
     volumes:
