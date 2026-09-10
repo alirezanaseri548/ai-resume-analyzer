@@ -40,15 +40,14 @@ docker compose -f docker-compose.db.yml ps
 
 ## Start the backend
 
-Open a terminal in `backend`:
+From the repository root, run:
 
-```powershell
+Set-Location backend
 npm install
 npx prisma generate
 npx prisma migrate deploy
 npx prisma db seed
 npm run start:dev
-```
 
 The API is available at `http://localhost:3001/api`.
 
@@ -59,12 +58,11 @@ For a disposable local database where migration history is not important, `npx p
 
 ## Start the frontend
 
-Open a second terminal in `frontend`:
+Open a second terminal at the repository root and run:
 
-```powershell
+Set-Location frontend
 npm install
 npm run dev
-```
 
 The Vite app is normally available at `http://localhost:5173` and uses `VITE_API_BASE_URL` from `frontend/.env`.
 
